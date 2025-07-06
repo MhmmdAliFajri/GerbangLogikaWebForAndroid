@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button.jsx";
 import { useCircuitStore } from "./store/circuitStore";
 import DraggableComponent from "./components/DraggableComponent";
@@ -26,6 +26,9 @@ function App() {
     setTempConnection,
     removeConnection,
   } = useCircuitStore();
+
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Handle mouse move for temporary connection
   useEffect(() => {
@@ -132,6 +135,183 @@ function App() {
     setTimeout(() => calculateOutputs(), 0);
   };
 
+  // Sidebar content as a function for reuse
+  const SidebarContent = () => (
+    <>
+      <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
+        <span className="mr-2">🧩</span>
+        Komponen
+      </h2>
+
+      {/* Input/Output */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
+          <span className="mr-2">🔌</span>
+          Input/Output
+        </h3>
+        <div className="grid grid-cols-1 gap-3">
+          {/* Input Switch */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => addInputOutput("INPUT")}
+            disabled={mode === "simulate"}
+            className="gate-button justify-start h-12 text-left bg-green-50 border-green-200 hover:bg-green-100 text-green-800 flex items-center gap-3 shadow-none rounded-xl"
+          >
+            <span className="inline-block w-5 h-5 rounded-full bg-green-600 border-2 border-green-700 mr-2"></span>
+            Input Switch
+          </Button>
+          {/* Output Angka */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => addInputOutput("OUTPUT")}
+            disabled={mode === "simulate"}
+            className="gate-button justify-start h-12 text-left bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-800 flex items-center gap-3 shadow-none rounded-xl"
+          >
+            <span className="inline-block w-5 h-5 rounded-full bg-blue-600 border-2 border-blue-700 mr-2"></span>
+            Output Angka
+          </Button>
+          {/* Output Lampu */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => addInputOutput("OUTPUT_LED_ICON")}
+            disabled={mode === "simulate"}
+            className="gate-button justify-start h-12 text-left bg-red-50 border-red-200 hover:bg-red-100 text-red-800 flex items-center gap-3 shadow-none rounded-xl"
+          >
+            <span className="inline-block w-5 h-5 mr-2">
+              <img
+                src="/assets/L2.jpg"
+                alt="Lampu Nyala"
+                className="w-5 h-5 object-contain"
+              />
+            </span>
+            Output Lampu
+          </Button>
+        </div>
+      </div>
+
+      {/* Logic Gates */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
+          <span className="mr-2">⚙️</span>
+          Gerbang Logika
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { type: "AND", color: "blue", image: "/assets/gates/AND.jpg" },
+            { type: "OR", color: "purple", image: "/assets/gates/OR.jpg" },
+            { type: "NOT", color: "orange", image: "/assets/gates/NOT.jpg" },
+            { type: "NAND", color: "teal", image: "/assets/gates/NAND.jpg" },
+            { type: "NOR", color: "pink", image: "/assets/gates/NOR.jpg" },
+            { type: "XOR", color: "indigo", image: "/assets/gates/XOR.jpg" },
+            { type: "XNOR", color: "emerald", image: "/assets/gates/XNOR.jpg" },
+          ].map(({ type, color, image }) => (
+            <Button
+              key={type}
+              variant="outline"
+              size="sm"
+              onClick={() => addGate(type)}
+              disabled={mode === "simulate"}
+              className={`gate-button h-12 bg-gradient-to-r from-${color}-50 to-${color}-100 border-${color}-200 hover:from-${color}-100 hover:to-${color}-200 text-${color}-800 font-semibold`}
+            >
+              <img
+                src={image}
+                alt={type}
+                className="w-6 h-6 object-contain mr-2"
+              />
+              {type}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Input Controls (hanya tampil di simulate mode) */}
+      {mode === "simulate" && (
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
+            <span className="mr-2">🎛️</span>
+            Input Controls
+          </h3>
+          <div className="space-y-3">
+            {components
+              .filter((c) => c.type === "INPUT")
+              .map((input) => (
+                <div
+                  key={input.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                >
+                  <span className="text-sm font-medium text-gray-700">
+                    {input.id}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant={inputValues[input.id] ? "default" : "outline"}
+                    onClick={() =>
+                      toggleInput(input.id, inputValues[input.id])
+                    }
+                    className={`transition-all duration-200 ${
+                      inputValues[input.id]
+                        ? "bg-green-500 hover:bg-green-600 glow"
+                        : ""
+                    }`}
+                  >
+                    {inputValues[input.id] ? "1" : "0"}
+                  </Button>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Truth Table */}
+      <div className="mb-8">
+        <TruthTable />
+      </div>
+
+      {/* Instructions */}
+      <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+        <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
+          <span className="mr-2">💡</span>
+          Instruksi:
+        </h4>
+        <ul className="text-xs text-blue-700 space-y-2">
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            Drag komponen untuk memindahkan
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            Klik kanan untuk menghapus
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            Tekan Delete untuk menghapus yang dipilih
+          </li>
+          {mode === "edit" && (
+            <>
+              <li className="flex items-start">
+                <span className="mr-2">•</span>
+                Drag dari output pin ke input pin untuk koneksi
+              </li>
+              <li className="flex items-start">
+                <span className="mr-2">•</span>
+                Klik kanan pada wire untuk menghapus koneksi
+              </li>
+            </>
+          )}
+          {mode === "simulate" && (
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              Klik input untuk toggle nilai
+            </li>
+          )}
+        </ul>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
@@ -139,7 +319,7 @@ function App() {
         className="header-gradient shadow-lg p-4"
         style={{ background: "#1B296D" }}
       >
-        <div className="flex md:p-0 p-2 md:flex-row flex-col justify-between items-center">
+        <div className="flex md:p-0 p-2 md:flex-row flex-col justify-between items-center relative">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center overflow-hidden">
               <AppLogo size={24} />
@@ -148,10 +328,20 @@ function App() {
               Simulasi Rangkaian Logika
             </h1>
           </div>
-          <div className="flex mt-4 md:mt-0 md:flex-row flex-col md:w-auto w-full gap-3">
+          {/* Drawer menu button (mobile/tablet only) */}
+          <button
+            className="lg:hidden absolute right-4 top-4 z-50 bg-white/80 rounded-full p-2 shadow"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Buka menu"
+          >
+            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 7h20M4 14h20M4 21h20" />
+            </svg>
+          </button>
+          <div className="flex mt-4 md:mt-0 md:flex-row flex-col md:w-auto w-full gap-2">
             <Button
               onClick={() => setMode("edit")}
-              className={`transition-all duration-200 font-semibold px-6 py-2 rounded-lg border-2 flex items-center gap-2 text-base shadow-md
+              className={`transition-all duration-200 font-semibold px-3 py-1.5 rounded-md border-2 flex items-center gap-2 text-sm shadow-md
                 ${
                   mode === "edit"
                     ? "bg-white border-purple-500 text-purple-700 shadow-purple-200"
@@ -159,14 +349,14 @@ function App() {
                 }
               `}
             >
-              <span className="text-lg">🔧</span> Edit Mode
+              <span className="text-base">🔧</span> Edit Mode
             </Button>
             <Button
               onClick={() => {
                 setMode("simulate");
                 calculateOutputs();
               }}
-              className={`transition-all duration-200 font-semibold px-6 py-2 rounded-lg border-2 flex items-center gap-2 text-base shadow-md
+              className={`transition-all duration-200 font-semibold px-3 py-1.5 rounded-md border-2 flex items-center gap-2 text-sm shadow-md
                 ${
                   mode === "simulate"
                     ? "bg-purple-500 border-purple-700 text-black shadow-purple-200"
@@ -174,12 +364,12 @@ function App() {
                 }
               `}
             >
-              <span className="text-lg">⚡</span> Simulate Mode
+              <span className="text-base">⚡</span> Simulate Mode
             </Button>
             <Button
               variant="destructive"
               onClick={reset}
-              className="bg-red-500 hover:bg-red-600 text-white border-0"
+              className="bg-red-500 hover:bg-red-600 text-white border-0 px-3 py-1.5 rounded-md text-sm"
             >
               🗑️ Reset
             </Button>
@@ -188,194 +378,36 @@ function App() {
       </div>
 
       <div className="flex flex-col lg:flex-row">
-        {/* Sidebar - Toolbox */}
-        <div className="w-full lg:w-80 bg-white/95 backdrop-blur-sm shadow-xl p-6 min-h-screen overflow-y-auto border-r border-gray-200">
-          <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
-            <span className="mr-2">🧩</span>
-            Komponen
-          </h2>
+        {/* Sidebar - Toolbox (desktop only) */}
+        <div className="hidden lg:block w-80 bg-white/95 backdrop-blur-sm shadow-xl p-6 min-h-screen overflow-y-auto border-r border-gray-200">
+          <SidebarContent />
+        </div>
 
-          {/* Input/Output */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
-              <span className="mr-2">🔌</span>
-              Input/Output
-            </h3>
-            <div className="grid grid-cols-1 gap-3">
-              {/* Input Switch */}
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => addInputOutput("INPUT")}
-                disabled={mode === "simulate"}
-                className="gate-button justify-start h-12 text-left bg-green-50 border-green-200 hover:bg-green-100 text-green-800 flex items-center gap-3 shadow-none rounded-xl"
-              >
-                <span className="inline-block w-5 h-5 rounded-full bg-green-600 border-2 border-green-700 mr-2"></span>
-                Input Switch
-              </Button>
-              {/* Output Angka */}
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => addInputOutput("OUTPUT")}
-                disabled={mode === "simulate"}
-                className="gate-button justify-start h-12 text-left bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-800 flex items-center gap-3 shadow-none rounded-xl"
-              >
-                <span className="inline-block w-5 h-5 rounded-full bg-blue-600 border-2 border-blue-700 mr-2"></span>
-                Output Angka
-              </Button>
-              {/* Output Lampu */}
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => addInputOutput("OUTPUT_LED_ICON")}
-                disabled={mode === "simulate"}
-                className="gate-button justify-start h-12 text-left bg-red-50 border-red-200 hover:bg-red-100 text-red-800 flex items-center gap-3 shadow-none rounded-xl"
-              >
-                <span className="inline-block w-5 h-5 mr-2">
-                  <img
-                    src="/assets/L2.jpg"
-                    alt="Lampu Nyala"
-                    className="w-5 h-5 object-contain"
-                  />
-                </span>
-                Output Lampu
-              </Button>
-            </div>
-          </div>
-
-          {/* Logic Gates */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
-              <span className="mr-2">⚙️</span>
-              Gerbang Logika
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { type: "AND", color: "blue", image: "/assets/gates/AND.jpg" },
-                { type: "OR", color: "purple", image: "/assets/gates/OR.jpg" },
-                {
-                  type: "NOT",
-                  color: "orange",
-                  image: "/assets/gates/NOT.jpg",
-                },
-                {
-                  type: "NAND",
-                  color: "teal",
-                  image: "/assets/gates/NAND.jpg",
-                },
-                { type: "NOR", color: "pink", image: "/assets/gates/NOR.jpg" },
-                {
-                  type: "XOR",
-                  color: "indigo",
-                  image: "/assets/gates/XOR.jpg",
-                },
-                {
-                  type: "XNOR",
-                  color: "emerald",
-                  image: "/assets/gates/XNOR.jpg",
-                },
-              ].map(({ type, color, image }) => (
-                <Button
-                  key={type}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addGate(type)}
-                  disabled={mode === "simulate"}
-                  className={`gate-button h-12 bg-gradient-to-r from-${color}-50 to-${color}-100 border-${color}-200 hover:from-${color}-100 hover:to-${color}-200 text-${color}-800 font-semibold`}
-                >
-                  <img
-                    src={image}
-                    alt={type}
-                    className="w-6 h-6 object-contain mr-2"
-                  />
-                  {type}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Input Controls (hanya tampil di simulate mode) */}
-          {mode === "simulate" && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
-                <span className="mr-2">🎛️</span>
-                Input Controls
-              </h3>
-              <div className="space-y-3">
-                {components
-                  .filter((c) => c.type === "INPUT")
-                  .map((input) => (
-                    <div
-                      key={input.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
-                    >
-                      <span className="text-sm font-medium text-gray-700">
-                        {input.id}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant={inputValues[input.id] ? "default" : "outline"}
-                        onClick={() =>
-                          toggleInput(input.id, inputValues[input.id])
-                        }
-                        className={`transition-all duration-200 ${
-                          inputValues[input.id]
-                            ? "bg-green-500 hover:bg-green-600 glow"
-                            : ""
-                        }`}
-                      >
-                        {inputValues[input.id] ? "1" : "0"}
-                      </Button>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {/* Truth Table */}
-          <div className="mb-8">
-            <TruthTable />
-          </div>
-
-          {/* Instructions */}
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-            <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
-              <span className="mr-2">💡</span>
-              Instruksi:
-            </h4>
-            <ul className="text-xs text-blue-700 space-y-2">
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                Drag komponen untuk memindahkan
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                Klik kanan untuk menghapus
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                Tekan Delete untuk menghapus yang dipilih
-              </li>
-              {mode === "edit" && (
-                <>
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    Drag dari output pin ke input pin untuk koneksi
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    Klik kanan pada wire untuk menghapus koneksi
-                  </li>
-                </>
-              )}
-              {mode === "simulate" && (
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  Klik input untuk toggle nilai
-                </li>
-              )}
-            </ul>
+        {/* Drawer Overlay */}
+        {drawerOpen && (
+          <div
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={() => setDrawerOpen(false)}
+          />
+        )}
+        {/* Drawer Menu (mobile/tablet only) */}
+        <div
+          className={`fixed top-0 right-0 h-full w-80 max-w-full bg-white shadow-2xl z-50 transition-transform duration-300 ${
+            drawerOpen ? "translate-x-0" : "translate-x-full"
+          } lg:hidden`}
+          style={{ minHeight: "100vh" }}
+        >
+          <button
+            className="absolute top-4 left-4 z-50 bg-gray-100 rounded-full p-2 shadow"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Tutup menu"
+          >
+            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="p-6 pt-16 overflow-y-auto h-full">
+            <SidebarContent />
           </div>
         </div>
 
@@ -465,3 +497,4 @@ function App() {
 }
 
 export default App;
+
