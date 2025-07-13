@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button.jsx";
 import { useCircuitStore } from "./store/circuitStore";
 import DraggableComponent from "./components/DraggableComponent";
@@ -29,6 +29,9 @@ function App() {
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const fileInputRef = useRef(null);
+  const saveCircuit = useCircuitStore((s) => s.saveCircuit);
+  const loadCircuit = useCircuitStore((s) => s.loadCircuit);
 
   // Handle mouse move for temporary connection
   useEffect(() => {
@@ -196,7 +199,7 @@ function App() {
       <div className="mb-8">
         <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
           <span className="mr-2">⚙️</span>
-          Gerbang Logika
+          Gerbang Logika Dasar
         </h3>
         <div className="grid grid-cols-2 gap-3">
           {[
@@ -224,6 +227,92 @@ function App() {
               {type}
             </Button>
           ))}
+        </div>
+      </div>
+
+      {/* Flip-Flop Section */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
+          <span className="mr-2">🔄</span>
+          Flip-Flop
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              addComponent({
+                type: "SR_FLIPFLOP",
+                position: {
+                  x: 150 + Math.random() * 200,
+                  y: 150 + Math.random() * 200,
+                },
+                inputs: 3, // S, R, CLK
+                outputs: 2, // Q, Q̅
+              })
+            }
+            disabled={mode === "simulate"}
+            className="gate-button h-12 bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:from-purple-100 hover:to-purple-200 text-purple-800 font-semibold"
+          >
+            SR Flip-Flop
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              addComponent({
+                type: "D_FLIPFLOP",
+                position: {
+                  x: 150 + Math.random() * 200,
+                  y: 150 + Math.random() * 200,
+                },
+                inputs: 2, // D, CLK
+                outputs: 2, // Q, Q̅
+              })
+            }
+            disabled={mode === "simulate"}
+            className="gate-button h-12 bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:from-purple-100 hover:to-purple-200 text-purple-800 font-semibold"
+          >
+            D Flip-Flop
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              addComponent({
+                type: "JK_FLIPFLOP",
+                position: {
+                  x: 150 + Math.random() * 200,
+                  y: 150 + Math.random() * 200,
+                },
+                inputs: 3, // J, K, CLK
+                outputs: 2, // Q, Q̅
+              })
+            }
+            disabled={mode === "simulate"}
+            className="gate-button h-12 bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:from-purple-100 hover:to-purple-200 text-purple-800 font-semibold"
+          >
+            JK Flip-Flop
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              addComponent({
+                type: "T_FLIPFLOP",
+                position: {
+                  x: 150 + Math.random() * 200,
+                  y: 150 + Math.random() * 200,
+                },
+                inputs: 2, // T, CLK
+                outputs: 2, // Q, Q̅
+              })
+            }
+            disabled={mode === "simulate"}
+            className="gate-button h-12 bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:from-purple-100 hover:to-purple-200 text-purple-800 font-semibold"
+          >
+            T Flip-Flop
+          </Button>
         </div>
       </div>
 
@@ -312,66 +401,239 @@ function App() {
     </>
   );
 
+  // Handler untuk file input
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        loadCircuit(data);
+      } catch (err) {
+        alert("File tidak valid!");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
       <div
-        className="header-gradient shadow-lg p-4"
+        className="header-gradient shadow-lg p-2"
         style={{ background: "#1B296D" }}
       >
-        <div className="flex md:p-0 p-2 md:flex-row flex-col justify-between items-center relative">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center overflow-hidden">
-              <AppLogo size={24} />
+        <div className="flex flex-row justify-between items-center relative gap-2">
+          {/* Logo dan judul compact */}
+          <div className="flex items-center space-x-2">
+            <button
+              className="lg:hidden mr-2 p-1 rounded hover:bg-white/20 focus:outline-none"
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Buka menu"
+            >
+              <svg width="28" height="28" fill="none" stroke="white" strokeWidth="2">
+                <path d="M4 7h20M4 14h20M4 21h20" />
+              </svg>
+            </button>
+            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center overflow-hidden">
+              <AppLogo size={22} />
             </div>
-            <h1 className="text-2xl font-bold text-white">
-              Simulasi Rangkaian Logika
-            </h1>
+            <span className="text-lg font-bold text-white tracking-tight">
+              Simulasi Logika
+            </span>
           </div>
-          {/* Drawer menu button (mobile/tablet only) */}
-          <button
-            className="lg:hidden absolute right-4 top-4 z-50 bg-white/80 rounded-full p-2 shadow"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Buka menu"
-          >
-            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 7h20M4 14h20M4 21h20" />
-            </svg>
-          </button>
-          <div className="flex mt-4 md:mt-0 md:flex-row flex-col md:w-auto w-full gap-2">
+          {/* Baris tombol compact */}
+          <div className="flex gap-1 items-center">
+            <Button
+              onClick={saveCircuit}
+              size="icon"
+              variant="outline"
+              className="border-2 border-purple-400 text-purple-700 bg-white/90 hover:bg-purple-100 rounded-md p-1"
+              title="Save (Simpan Rangkaian)"
+              style={{ minWidth: 0 }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="mr-1"
+              >
+                <rect
+                  x="3"
+                  y="3"
+                  width="14"
+                  height="14"
+                  rx="2"
+                  fill="#fff"
+                  stroke="#a78bfa"
+                  strokeWidth="1.5"
+                />
+                <rect
+                  x="6"
+                  y="6"
+                  width="8"
+                  height="5"
+                  rx="1"
+                  fill="#a78bfa"
+                />
+                <rect
+                  x="7.5"
+                  y="13"
+                  width="5"
+                  height="2"
+                  rx="0.5"
+                  fill="#a78bfa"
+                />
+              </svg>
+            </Button>
+            <Button
+              onClick={() => fileInputRef.current.click()}
+              size="icon"
+              variant="outline"
+              className="border-2 border-purple-400 text-purple-700 bg-white/90 hover:bg-purple-100 rounded-md p-1"
+              title="Load (Muat Rangkaian)"
+              style={{ minWidth: 0 }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="mr-1"
+              >
+                <rect
+                  x="2.5"
+                  y="6"
+                  width="15"
+                  height="9.5"
+                  rx="2"
+                  fill="#fff"
+                  stroke="#a78bfa"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d="M2.5 7.5h15V8a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-.5z"
+                  fill="#a78bfa"
+                />
+              </svg>
+            </Button>
+            <input
+              type="file"
+              accept="application/json"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
             <Button
               onClick={() => setMode("edit")}
-              className={`transition-all duration-200 font-semibold px-3 py-1.5 rounded-md border-2 flex items-center gap-2 text-sm shadow-md
-                ${
-                  mode === "edit"
-                    ? "bg-white border-purple-500 text-purple-700 shadow-purple-200"
-                    : "bg-white/80 border-purple-300 text-purple-400 hover:bg-white"
-                }
-              `}
+              size="icon"
+              variant="outline"
+              className={`border-2 ${
+                mode === "edit"
+                  ? "border-purple-500 bg-white text-purple-700 shadow-purple-200"
+                  : "border-purple-300 bg-white/80 text-purple-400 hover:bg-white"
+              } rounded-md p-1`}
+              title="Edit Mode"
+              style={{ minWidth: 0 }}
             >
-              <span className="text-base">🔧</span> Edit Mode
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="mr-1"
+              >
+                <path
+                  d="M4 16l1.5-5.5L14 2.5a2 2 0 0 1 2.8 2.8L8.5 15.5L4 16z"
+                  stroke="#a78bfa"
+                  strokeWidth="1.5"
+                  fill="none"
+                />
+                <circle cx="15.5" cy="4.5" r="1.5" fill="#a78bfa" />
+              </svg>
             </Button>
             <Button
               onClick={() => {
                 setMode("simulate");
                 calculateOutputs();
               }}
-              className={`transition-all duration-200 font-semibold px-3 py-1.5 rounded-md border-2 flex items-center gap-2 text-sm shadow-md
-                ${
-                  mode === "simulate"
-                    ? "bg-purple-500 border-purple-700 text-black shadow-purple-200"
-                    : "bg-purple-200 border-purple-300 text-black hover:bg-purple-300"
-                }
-              `}
+              size="icon"
+              variant="outline"
+              className={`border-2 ${
+                mode === "simulate"
+                  ? "border-purple-500 bg-purple-100 text-black shadow-purple-200"
+                  : "border-purple-300 bg-white/80 text-black hover:bg-purple-50"
+              } rounded-md p-1`}
+              title="Simulate Mode"
+              style={{ minWidth: 0 }}
             >
-              <span className="text-base">⚡</span> Simulate Mode
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="mr-1"
+              >
+                <polygon
+                  points="6,4 16,10 6,16"
+                  fill="#a78bfa"
+                  stroke="#a78bfa"
+                  strokeWidth="1.5"
+                />
+              </svg>
             </Button>
             <Button
               variant="destructive"
               onClick={reset}
-              className="bg-red-500 hover:bg-red-600 text-white border-0 px-3 py-1.5 rounded-md text-sm"
+              size="icon"
+              className="bg-red-500 hover:bg-red-600 text-white border-0 rounded-md p-1"
+              title="Reset (Hapus Semua)"
+              style={{ minWidth: 0 }}
             >
-              🗑️ Reset
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="mr-1"
+              >
+                <rect
+                  x="5"
+                  y="7"
+                  width="10"
+                  height="8"
+                  rx="2"
+                  fill="#fff"
+                  stroke="#e53e3e"
+                  strokeWidth="1.5"
+                />
+                <rect
+                  x="8"
+                  y="10"
+                  width="1.5"
+                  height="3"
+                  rx="0.5"
+                  fill="#e53e3e"
+                />
+                <rect
+                  x="10.5"
+                  y="10"
+                  width="1.5"
+                  height="3"
+                  rx="0.5"
+                  fill="#e53e3e"
+                />
+                <rect
+                  x="7"
+                  y="4"
+                  width="6"
+                  height="2"
+                  rx="1"
+                  fill="#e53e3e"
+                />
+              </svg>
             </Button>
           </div>
         </div>
@@ -383,22 +645,20 @@ function App() {
           <SidebarContent />
         </div>
 
-        {/* Drawer Overlay */}
+        {/* Drawer Overlay (mobile only) */}
         {drawerOpen && (
           <div
-            className="fixed inset-0 bg-black/30 z-40"
+            className="fixed inset-0 bg-black/30 z-40 lg:hidden"
             onClick={() => setDrawerOpen(false)}
           />
         )}
-        {/* Drawer Menu (mobile/tablet only) */}
+        {/* Drawer Menu (mobile only) */}
         <div
-          className={`fixed top-0 right-0 h-full w-80 max-w-full bg-white shadow-2xl z-50 transition-transform duration-300 ${
-            drawerOpen ? "translate-x-0" : "translate-x-full"
-          } lg:hidden`}
+          className={`fixed top-0 left-0 h-full w-72 max-w-full bg-white shadow-2xl z-50 transition-transform duration-300 ${drawerOpen ? "translate-x-0" : "-translate-x-full"} lg:hidden`}
           style={{ minHeight: "100vh" }}
         >
           <button
-            className="absolute top-4 left-4 z-50 bg-gray-100 rounded-full p-2 shadow"
+            className="absolute top-4 right-4 z-50 bg-gray-100 rounded-full p-2 shadow"
             onClick={() => setDrawerOpen(false)}
             aria-label="Tutup menu"
           >
@@ -406,7 +666,7 @@ function App() {
               <path d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <div className="p-6 pt-16 overflow-y-auto h-full">
+          <div className="p-6 pt-16 overflow-y-auto h-full" onClick={() => setDrawerOpen(false)}>
             <SidebarContent />
           </div>
         </div>
