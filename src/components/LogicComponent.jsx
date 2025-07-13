@@ -12,6 +12,13 @@ const gateImages = {
   XNOR: '/assets/gates/XNOR.jpg',
 };
 
+const flipflopImages = {
+  SR_FLIPFLOP: '/assets/flipflop/SR.jpg',
+  D_FLIPFLOP: '/assets/flipflop/D.jpg',
+  JK_FLIPFLOP: '/assets/flipflop/JK.jpg',
+  T_FLIPFLOP: '/assets/flipflop/T.jpg',
+};
+
 const LogicComponent = ({ component }) => {
   const { inputValues, outputValues, setInputValue, calculateOutputs, mode, connections } = useCircuitStore();
 
@@ -94,12 +101,53 @@ const LogicComponent = ({ component }) => {
           className="w-12 h-12 object-contain mx-auto"
         />
       );
+    } else if (flipflopImages[component.type]) {
+      // Perbesar gambar khusus SR Flip-Flop
+      const isSR = component.type === 'SR_FLIPFLOP';
+      return (
+        <img
+          src={flipflopImages[component.type]}
+          alt={component.type}
+          className={isSR ? "w-24 h-24 object-contain mx-auto" : "w-16 h-16 object-contain mx-auto"}
+        />
+      );
     } else {
       return component.type;
     }
   };
 
   const getPinPosition = (type, index = 0) => {
+    // Penyesuaian posisi pin agar tepat di lingkaran hitam pada gambar
+    if (flipflopImages[component.type]) {
+      // Flip-Flop: mapping pin sesuai gambar
+      if (type === 'input') {
+        switch (component.type) {
+          case 'SR_FLIPFLOP':
+            // 2 input: atas, bawah (centered, spaced)
+            return { x: 0, y: [15, 45][index] };
+          case 'JK_FLIPFLOP':
+            return { x: 0, y: [11, 30, 49][index] };
+          case 'D_FLIPFLOP':
+          case 'T_FLIPFLOP':
+            return { x: 0, y: [15, 45][index] };
+          default:
+            return { x: 0, y: 32 };
+        }
+      } else {
+        // output SR Flip-Flop: kanan, center, berjarak
+        switch (component.type) {
+          case 'SR_FLIPFLOP':
+            return { x: 92, y: [15, 45][index] };
+          case 'JK_FLIPFLOP':
+            return { x: 92, y: [11, 49][index] };
+          case 'D_FLIPFLOP':
+          case 'T_FLIPFLOP':
+            return { x: 92, y: [15, 45][index] };
+          default:
+            return { x: 92, y: index === 0 ? 24 : 56 };
+        }
+      }
+    }
     // Penyesuaian posisi pin agar tepat di lingkaran hitam pada gambar
     if (type === 'output') {
       switch (component.type) {
@@ -127,6 +175,13 @@ const LogicComponent = ({ component }) => {
             return { x: 0, y: index === 0 ? 16 : 48 };
           } else if (component.inputs === 1) {
             return { x: 0, y: 32 };
+          } else if (flipflopImages[component.type]) {
+            // Flip-Flop: input S/R/CLK, D/CLK, JK/CLK, T/CLK, output Q/Q̅
+            if (type === 'input') {
+              // 3 input: S, R, CLK (atau D, CLK, dsb)
+              const y = [16, 32, 48][index] || 32;
+              return { x: 0, y };
+            } 
           } else {
             // fallback
             return { x: 0, y: 32 };
@@ -145,7 +200,40 @@ const LogicComponent = ({ component }) => {
 
   const renderPins = () => {
     const pins = [];
-    
+    if (flipflopImages[component.type]) {
+      // Penyesuaian jumlah input SR agar hanya 2
+      let inputCount = component.inputs;
+      if (component.type === 'SR_FLIPFLOP') inputCount = 2;
+      // Input pins
+      for (let i = 0; i < inputCount; i++) {
+        const position = getPinPosition('input', i);
+        pins.push(
+          <ConnectionPin
+            key={`input-${i}`}
+            componentId={component.id}
+            pinType="input"
+            pinIndex={i}
+            position={position}
+            isConnected={isConnected('input', i)}
+          />
+        );
+      }
+      // Output pins (2)
+      for (let i = 0; i < component.outputs; i++) {
+        const position = getPinPosition('output', i);
+        pins.push(
+          <ConnectionPin
+            key={`output-${i}`}
+            componentId={component.id}
+            pinType="output"
+            pinIndex={i}
+            position={position}
+            isConnected={isConnected('output', i)}
+          />
+        );
+      }
+      return pins;
+    }
     // Input pins
     if (component.inputs > 0) {
       for (let i = 0; i < component.inputs; i++) {
@@ -162,7 +250,6 @@ const LogicComponent = ({ component }) => {
         );
       }
     }
-    
     // Output pins
     if (component.outputs > 0) {
       const position = getPinPosition('output', 0);
@@ -177,7 +264,6 @@ const LogicComponent = ({ component }) => {
         />
       );
     }
-    
     return pins;
   };
 
@@ -191,10 +277,10 @@ const LogicComponent = ({ component }) => {
       </div>
       {/* Connection pins */}
       {mode === 'edit' && renderPins()}
-      {/* Label tipe gerbang di luar kotak, di bawah komponen */}
-      {(['AND','OR','NOT','NAND','NOR','XOR','XNOR'].includes(component.type)) && (
+      {/* Label tipe gerbang/flipflop di bawah komponen */}
+      {(['AND','OR','NOT','NAND','NOR','XOR','XNOR','SR_FLIPFLOP','D_FLIPFLOP','JK_FLIPFLOP','T_FLIPFLOP'].includes(component.type)) && (
         <div className="absolute left-1/2 -bottom-5 -translate-x-1/2 text-xs font-bold text-blue-700 select-none pointer-events-none">
-          {component.type}
+          {component.type.replace('_FLIPFLOP','')}
         </div>
       )}
     </div>
