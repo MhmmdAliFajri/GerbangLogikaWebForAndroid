@@ -114,6 +114,39 @@ const Wire = ({ connection, onDelete }) => {
         </text>
       )}
 
+      {/* Scissors icon for cutting wire (edit mode only, at the top of the wire) */}
+      {mode === "edit" && (
+        <g
+          style={{ cursor: "pointer" }}
+          onClick={() => onDelete(connection.id)}
+          tabIndex={0}
+        >
+          <rect
+            x={fromPos.x - 12}
+            y={fromPos.y - 36}
+            width="24"
+            height="24"
+            fill="#fff"
+            fillOpacity="0.8"
+            rx="6"
+          />
+          <svg
+            x={fromPos.x - 10}
+            y={fromPos.y - 34}
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="6" cy="6" r="2.5" stroke="#ef4444" strokeWidth="1.5" fill="#fff" />
+            <circle cx="14" cy="14" r="2.5" stroke="#ef4444" strokeWidth="1.5" fill="#fff" />
+            <line x1="7.5" y1="7.5" x2="12.5" y2="12.5" stroke="#ef4444" strokeWidth="1.5" />
+            <line x1="12.5" y1="7.5" x2="7.5" y2="12.5" stroke="#ef4444" strokeWidth="1.5" />
+          </svg>
+        </g>
+      )}
+
       {/* Connection points */}
       <circle
         cx={fromPos.x}
