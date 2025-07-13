@@ -99,20 +99,16 @@ const TruthTable = () => {
             </tr>
           </thead>
           <tbody>
-            {truthTable.map((row, index) => (
-              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            {truthTable.map((row, idx) => (
+              <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 {inputComponents.map(input => (
-                  <td key={input.id} className="border border-gray-300 px-3 py-2 text-center text-sm">
-                    <span className={`font-mono ${row[input.id] ? 'text-green-600 font-bold' : 'text-gray-500'}`}>
-                      {row[input.id] ? '1' : '0'}
-                    </span>
+                  <td key={input.id} className="border border-gray-300 px-3 py-2 text-center">
+                    {row[input.id] ? '1' : '0'}
                   </td>
                 ))}
                 {outputComponents.map(output => (
-                  <td key={output.id} className="border border-gray-300 px-3 py-2 text-center text-sm">
-                    <span className={`font-mono ${row[output.id] ? 'text-red-600 font-bold' : 'text-gray-500'}`}>
-                      {row[output.id] ? '1' : '0'}
-                    </span>
+                  <td key={output.id} className="border border-gray-300 px-3 py-2 text-center">
+                    {row[output.id] ? '1' : '0'}
                   </td>
                 ))}
               </tr>
