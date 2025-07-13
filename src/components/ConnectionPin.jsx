@@ -139,6 +139,41 @@ const ConnectionPin = ({
     const baseX = component.position.x;
     const baseY = component.position.y;
 
+    // Mapping posisi pin flip-flop agar konsisten dengan visual
+    if (
+      component.type === "SR_FLIPFLOP" ||
+      component.type === "D_FLIPFLOP" ||
+      component.type === "JK_FLIPFLOP" ||
+      component.type === "T_FLIPFLOP"
+    ) {
+      if (type === "input") {
+        switch (component.type) {
+          case "SR_FLIPFLOP":
+            return { x: baseX, y: baseY + [15, 45][index] };
+          case "JK_FLIPFLOP":
+            return { x: baseX, y: baseY + [11, 30, 49][index] };
+          case "D_FLIPFLOP":
+          case "T_FLIPFLOP":
+            return { x: baseX, y: baseY + [15, 45][index] };
+          default:
+            return { x: baseX, y: baseY + 32 };
+        }
+      } else {
+        // output
+        switch (component.type) {
+          case "SR_FLIPFLOP":
+            return { x: baseX + 92, y: baseY + [15, 45][index] };
+          case "JK_FLIPFLOP":
+            return { x: baseX + 92, y: baseY + [11, 49][index] };
+          case "D_FLIPFLOP":
+          case "T_FLIPFLOP":
+            return { x: baseX + 92, y: baseY + [15, 45][index] };
+          default:
+            return { x: baseX + 92, y: baseY + (index === 0 ? 24 : 56) };
+        }
+      }
+    }
+
     if (type === "output") {
       return {
         x: baseX + (component.type === "INPUT" ? 80 : 96), // Right side
@@ -181,8 +216,87 @@ const ConnectionPin = ({
       onMouseUp={handleMouseUp}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-    />
+    >
+      {/* Gunting untuk memutus sambungan jika sudah terhubung */}
+      {isConnected && mode === "edit" && (
+        <div
+          style={{
+            position: "absolute",
+            top: -28,
+            left: "50%",
+            transform: "translateX(-50%)",
+            cursor: "pointer",
+            zIndex: 20,
+            background: "#fff",
+            borderRadius: 6,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            padding: 2,
+          }}
+          title="Putus sambungan"
+          onClick={(e) => {
+            e.stopPropagation();
+            // Cari koneksi yang terkait dengan pin ini
+            const conn =
+              pinType === "output"
+                ? connections.find(
+                    (c) => c.from === componentId && c.fromPin === pinIndex
+                  )
+                : connections.find(
+                    (c) => c.to === componentId && c.toPin === pinIndex
+                  );
+            if (conn) {
+              if (window.confirm("Putus sambungan pin ini?")) {
+                // Hapus koneksi
+                useCircuitStore.getState().removeConnection(conn.id);
+              }
+            }
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="6"
+              cy="6"
+              r="2.5"
+              stroke="#ef4444"
+              strokeWidth="1.5"
+              fill="#fff"
+            />
+            <circle
+              cx="14"
+              cy="14"
+              r="2.5"
+              stroke="#ef4444"
+              strokeWidth="1.5"
+              fill="#fff"
+            />
+            <line
+              x1="7.5"
+              y1="7.5"
+              x2="12.5"
+              y2="12.5"
+              stroke="#ef4444"
+              strokeWidth="1.5"
+            />
+            <line
+              x1="12.5"
+              y1="7.5"
+              x2="7.5"
+              y2="12.5"
+              stroke="#ef4444"
+              strokeWidth="1.5"
+            />
+          </svg>
+        </div>
+      )}
+    </div>
   );
 };
 
 export default ConnectionPin;
+
